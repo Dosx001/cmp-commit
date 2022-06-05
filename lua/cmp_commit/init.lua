@@ -12,7 +12,7 @@ source.default_config = {
 	format = { "", "" },
 	length = -1,
 	block = "ls -RA -I.git -p | grep -v / | uniq | tail -n +3",
-	word_list = "",
+	word_list = {},
 }
 
 source.setup = function(config)
@@ -35,9 +35,9 @@ source.setup = function(config)
 		)
 	end
 	if config.word_list then
-		local word_list = vim.fn.expand(config.word_list)
-		if vim.fn.word_listreadable(word_list) == 1 then
-			source.default_config.word_list = vim.fn.json_decode(vim.fn.readword_list(word_list))
+		local file = vim.fn.expand(config.word_list)
+		if vim.fn.filereadable(file) == 1 then
+			source.default_config.word_list = vim.fn.json_decode(vim.fn.readfile(file))
 		end
 	end
 end
