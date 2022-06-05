@@ -15,7 +15,7 @@ source.complete = function(self, request, callback)
     items = self._source("git branch --show-current", request, input)
   elseif input == '[' then
     items = self._source("git status -s | awk '{print $2}'", request, input)
-  else
+  elseif input == '{' then
     items = self._source('ls -RA -Inode_modules -I.git -p | grep -v / | sort | uniq | tail -n +3', request, input)
   end
   callback(items)
