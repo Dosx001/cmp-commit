@@ -35,7 +35,7 @@ source.complete = function(self, request, callback)
   local input = string.sub(request.context.cursor_before_line, request.offset - 1)
   local items
   if input == '*' then
-    items = self._source("git branch --show-current", request, input)
+    items = self._source("git branch --show-current 2> /dev/null || git branch | grep '* ' | awk '{print $2}'", request, input)
   elseif input == '[' or input == '{' then
     items = self._source(source.default_config.block, request, input)
   end
