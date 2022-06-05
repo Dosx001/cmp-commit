@@ -12,32 +12,44 @@ source.default_config = {
   format = { "", "" },
   length = -1,
   block = "ls -RA -I.git -p | grep -v / | uniq | tail -n +3",
-  path = ""
+  file = ""
 }
 
 source.setup = function(config)
-  if config.format ~= nil and #config.format == 2 then
+  if config.format and #config.format == 2 then
     source.default_config.format = config.format
   end
-  if config.length ~= nil and config.length > 0 then
+  if config.length and config.length > 0 then
     source.default_config.length = config.length
   end
-  if config.block ~= nil and type(config.block) == "table" then
+  if config.block and type(config.block) == "table" then
     local dirs = ""
     for _, dir in pairs(config.block) do
       dirs = string.format('%s %s', dirs, string.format('-I%s', dir))
     end
     source.default_config.block = string.format('%s %s %s', 'ls -RA -I.git', dirs, '-p | grep -v / | uniq | tail -n +3')
   end
+  if config.file then
+    local file = vim.fn.expand(config.file)
+    if vim.fn.filereadable(file) == 1 then
+      source.default_config.file = vim.fn.json_decode(vim.fn.readfile(file))
+    end
+  end
 end
 
 source.complete = function(self, request, callback)
   local input = string.sub(request.context.cursor_before_line, request.offset - 1)
-  local items
+  local items = {}
   if input == '*' then
     items = self._source("git branch --show-current 2> /dev/null || git branch | grep '* ' | awk '{print $2}'", request, input)
   elseif input == '[' or input == '{' then
     items = self._source(source.default_config.block, request, input)
+  else
+    for _, word in pairs(self.default_config.file) do
+      table.insert(items, {
+        label = word
+      })
+    end
   end
   callback(items)
 end
@@ -46,13 +58,12 @@ source._source = function(src, request, input)
   local items = {}
   local pipe = io.popen(src)
   local value
-  if pipe ~= nil then
+  if pipe then
     value = input == '*' and
         string.format('%s%s%s', source.default_config.format[1], pipe:read('l'), source.default_config.format[2]) or
         pipe:read('a')
+    pipe:close()
   end
-  ---@diagnostic disable-next-line: need-check-nil, missing-parameter
-  pipe.close()
   for line in value:gmatch("[^\r\n]+") do
     table.insert(items, {
       label = line,
