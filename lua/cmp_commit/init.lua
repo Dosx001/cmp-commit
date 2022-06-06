@@ -13,11 +13,15 @@ source.default_config = {
 	length = -1,
 	block = "ls -RA -I.git -p | grep -v / | uniq | tail -n +3",
 	word_list = {},
+	branch = "git branch --show-current 2> /dev/null || git branch | grep '* ' | awk '{print $2}'",
 }
 
 source.setup = function(config)
 	if config.format and #config.format == 2 then
 		source.default_config.format = config.format
+	end
+	if config.set then
+		vim.cmd("call setline(1, '" .. source._pipe(source.default_config.branch, "*") .. "')")
 	end
 	if config.length and config.length > 0 then
 		source.default_config.length = config.length
@@ -46,11 +50,7 @@ source.complete = function(self, request, callback)
 	local input = string.sub(request.context.cursor_before_line, request.offset - 1)
 	local items = {}
 	if input == "*" then
-		items = self._source(
-			"git branch --show-current 2> /dev/null || git branch | grep '* ' | awk '{print $2}'",
-			request,
-			input
-		)
+		items = self._source(self.default_config.branch, request, input)
 	elseif input == "[" or input == "{" then
 		items = self._source(source.default_config.block, request, input)
 	else
@@ -63,8 +63,7 @@ source.complete = function(self, request, callback)
 	callback(items)
 end
 
-source._source = function(src, request, input)
-	local items = {}
+source._pipe = function(src, input)
 	local pipe = io.popen(src)
 	local value
 	if pipe then
@@ -78,11 +77,17 @@ source._source = function(src, request, input)
 			or pipe:read("a")
 		pipe:close()
 	end
+	return value
+end
+
+source._source = function(src, request, input)
+	local value = source._pipe(src, input)
+	local items = {}
 	for line in value:gmatch("[^\r\n]+") do
 		table.insert(items, {
 			label = line,
 			textEdit = {
-				newText = input == "{" and string.sub(line, 0, source.default_config.length) or line,
+				newText = input == "[" and string.sub(line, 0, source.default_config.length) or line,
 				range = {
 					start = {
 						line = request.context.cursor.row - 1,
