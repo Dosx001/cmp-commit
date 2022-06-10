@@ -51,13 +51,36 @@ source.complete = function(self, request, callback)
 	elseif input == "[" or input == "{" then
 		items = self._source(source.default_config.block, request, input)
 	else
-		for _, word in pairs(vim.b.cmp_commit_wl) do
-			table.insert(items, {
-				label = word,
-			})
+		for _, line in pairs(vim.b.cmp_commit_wl) do
+			if type(line) == "table" then
+				for label, text in pairs(line) do
+					source._table(items, request, input, label, text)
+				end
+			else
+				source._table(items, request, input, line, line)
+			end
 		end
 	end
 	callback(items)
+end
+
+source._table = function(tab, request, input, label, text)
+	table.insert(tab, {
+		label = label,
+		textEdit = {
+			newText = input == "[" and string.sub(text, 0, source.default_config.length) or text,
+			range = {
+				start = {
+					line = request.context.cursor.row - 1,
+					character = request.context.cursor.col - #input,
+				},
+				["end"] = {
+					line = request.context.cursor.row - 1,
+					character = request.context.cursor.col,
+				},
+			},
+		},
+	})
 end
 
 source._pipe = function(src, input)
@@ -81,22 +104,7 @@ source._source = function(src, request, input)
 	local value = source._pipe(src, input)
 	local items = {}
 	for line in value:gmatch("[^\r\n]+") do
-		table.insert(items, {
-			label = line,
-			textEdit = {
-				newText = input == "[" and string.sub(line, 0, source.default_config.length) or line,
-				range = {
-					start = {
-						line = request.context.cursor.row - 1,
-						character = request.context.cursor.col - 1 - #input,
-					},
-					["end"] = {
-						line = request.context.cursor.row - 1,
-						character = request.context.cursor.col - 1,
-					},
-				},
-			},
-		})
+		source._table(items, request, input, line, line)
 	end
 	return items
 end
