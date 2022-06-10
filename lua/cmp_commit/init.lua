@@ -21,7 +21,7 @@ source.setup = function(config)
 		source.default_config.format = config.format
 	end
 	if config.set then
-		vim.cmd("call setline(1, '" .. source._pipe(source.default_config.branch, "*") .. "')")
+		vim.b.cmp_commit_gb = source._pipe(source.default_config.branch, "*")
 	end
 	if config.length and config.length > 0 then
 		source.default_config.length = config.length
@@ -39,10 +39,7 @@ source.setup = function(config)
 		)
 	end
 	if config.word_list then
-		local file = vim.fn.expand(config.word_list)
-		if vim.fn.filereadable(file) == 1 then
-			source.default_config.word_list = vim.fn.json_decode(vim.fn.readfile(file))
-		end
+		vim.b.cmp_commit_wl = config.word_list
 	end
 end
 
@@ -54,7 +51,7 @@ source.complete = function(self, request, callback)
 	elseif input == "[" or input == "{" then
 		items = self._source(source.default_config.block, request, input)
 	else
-		for _, word in pairs(self.default_config.word_list) do
+		for _, word in pairs(vim.b.cmp_commit_wl) do
 			table.insert(items, {
 				label = word,
 			})
