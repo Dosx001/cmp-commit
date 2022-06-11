@@ -55,7 +55,7 @@ source.complete = function(self, request, callback)
 	elseif input == "[" or input == "{" then
 		items = self._source(source.default_config.block, request, input)
 	else
-		for _, list in pairs({vim.b.cmp_commit_rl, vim.b.cmp_commit_wl}) do
+		for _, list in pairs({ vim.b.cmp_commit_rl, vim.b.cmp_commit_wl }) do
 			for _, line in pairs(list) do
 				if type(line) == "table" then
 					for label, text in pairs(line) do
@@ -71,6 +71,10 @@ source.complete = function(self, request, callback)
 end
 
 source._table = function(tab, request, input, label, text)
+	local offset = 0
+	if string.find("*[{", input, 1, true) or request.context.cursor.col == 2 then
+		offset = 1
+	end
 	table.insert(tab, {
 		label = label,
 		textEdit = {
@@ -78,7 +82,7 @@ source._table = function(tab, request, input, label, text)
 			range = {
 				start = {
 					line = request.context.cursor.row - 1,
-					character = request.context.cursor.col - #input,
+					character = request.context.cursor.col - offset - #input,
 				},
 				["end"] = {
 					line = request.context.cursor.row - 1,
