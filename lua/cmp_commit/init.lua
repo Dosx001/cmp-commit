@@ -41,6 +41,10 @@ source.setup = function(config)
 	if config.word_list then
 		vim.b.cmp_commit_wl = config.word_list
 	end
+	if config.repo_name and config.repo_list then
+		vim.b.cmp_commit_rn = config.repo_name
+		vim.b.cmp_commit_rl = config.repo_list
+	end
 end
 
 source.complete = function(self, request, callback)
@@ -51,13 +55,15 @@ source.complete = function(self, request, callback)
 	elseif input == "[" or input == "{" then
 		items = self._source(source.default_config.block, request, input)
 	else
-		for _, line in pairs(vim.b.cmp_commit_wl) do
-			if type(line) == "table" then
-				for label, text in pairs(line) do
-					source._table(items, request, input, label, text)
+		for _, list in pairs({vim.b.cmp_commit_rl, vim.b.cmp_commit_wl}) do
+			for _, line in pairs(list) do
+				if type(line) == "table" then
+					for label, text in pairs(line) do
+						source._table(items, request, input, label, text)
+					end
+				else
+					source._table(items, request, input, line, line)
 				end
-			else
-				source._table(items, request, input, line, line)
 			end
 		end
 	end
