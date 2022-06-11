@@ -41,8 +41,7 @@ source.setup = function(config)
 	if config.word_list then
 		vim.b.cmp_commit_wl = config.word_list
 	end
-	if config.repo_name and config.repo_list then
-		vim.b.cmp_commit_rn = config.repo_name
+	if config.repo_list and type(config.repo_list) == "table" then
 		vim.b.cmp_commit_rl = config.repo_list
 	end
 end
