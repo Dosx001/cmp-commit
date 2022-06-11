@@ -53,7 +53,10 @@ require('cmp_commit').setup({
   format = { "<<= ", " =>>" },
   length = 9,
   block = { "__pycache__", "CMakeFiles", "node_modules", "target" },
-  word_list = "~/cmpcommit.json"
+  word_list = "~/cmpcommit.json",
+  repo_list =  {
+    { "Name of repo", "PATH/TO/FILE.json" }
+  }
 })
 ```
 
@@ -105,6 +108,38 @@ I recommend creating a new git repo to storage your word list and sharing it wit
 ```lua
 require('cmp_commit').setup({
   word_list = "PATH/TO/FILE.json"
+})
+```
+
+### Abbreviation
+
+You also add abbreviation to your word list. You simply need to add an json object inside the
+array, just like the following code block.
+
+```json
+[
+  {
+    "gh": "GitHub",
+    "nv": "NeoVim",
+    "GNU": "GNU's Not Unix",
+    "bug": "Added new feature"
+  }
+]
+```
+
+### Multiple Word List
+
+If you work on multiple teams using different word lists per project can be useful. Just add the
+name of your git repo and the path to the word list. Each word list set in `repo_list` will only
+work on the project you set it to.
+
+Also note that `word_list` will still work on top of `repo_list`.
+
+```lua
+require('cmp_commit').setup({
+  repo_list =  {
+    { "Name of repo", "PATH/TO/FILE.json" }
+  }
 })
 ```
 
